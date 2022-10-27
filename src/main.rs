@@ -48,12 +48,13 @@ async fn root() -> &'static str {
 
 async fn ledger(
     // this argument tells axum to parse the request body
-    // as JSON into a `CreateUser` type
+    // as JSON into a `LedgerCommand` type
     Json(payload): Json<LedgerCommand>
-) -> &'static str {
+) -> String {
     //todo: run ledger
 
-    "Ledger endpoint. You asked for {}", payload
+    let msg = "Ledger endpoint. You asked for ".to_string() + &payload.command;
+    return msg.to_owned();
 }
 
 #[derive(Deserialize)]
