@@ -53,8 +53,7 @@ async fn ledger(
 ) -> String {
     //todo: run ledger
 
-    let msg = "Ledger endpoint. You asked for ".to_string() + &payload.command;
-    return msg.to_owned();
+    return format!("Ledger endpoint. You asked for {}", payload.command);
 }
 
 #[derive(Deserialize)]
