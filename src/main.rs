@@ -37,7 +37,9 @@ async fn main() {
         .layer(cors);
 
     let address = SocketAddr::from(([0, 0, 0, 0], 3000));
+    
     tracing::debug!("listening on {}", address);
+    // print!("Listening on {}", address);
 
     // run it with hyper on localhost:3000
     axum::Server::bind(&address)
@@ -64,7 +66,7 @@ async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoRespo
     let ledger_output = run_ledger(query);
 
     let result = format!(
-        "Ledger response. You asked for: {}. Ledger replied: {}",
+        "Ledger response. You asked for: {}. Ledger replied:\n{}",
         query, ledger_output
     );
     (StatusCode::OK, result)
