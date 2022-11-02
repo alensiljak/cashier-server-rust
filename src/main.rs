@@ -3,6 +3,7 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
     routing::get,
+    Json,
     // Json,
     Router,
 };
@@ -10,6 +11,7 @@ use axum::{
 use std::{collections::HashMap, net::SocketAddr, process::Command};
 //use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tower_http::cors::{Any, CorsLayer};
+extern crate base64;
 
 #[tokio::main]
 async fn main() {
@@ -31,13 +33,12 @@ async fn main() {
         //.route("/", get(|| async { "Hello, World!" }))
         .route("/", get(ledger))
         .route("/hello", get(hello_img))
-        //.route("/ledger", get(ledger))
         .route("/ping", get(|| async { "pong" }))
         .route("/test", get(root))
         .layer(cors);
 
     let address = SocketAddr::from(([0, 0, 0, 0], 3000));
-    
+
     tracing::debug!("listening on {}", address);
     // print!("Listening on {}", address);
 
@@ -49,15 +50,23 @@ async fn main() {
 }
 
 // basic handler that responds with a static string
-pub async fn root() -> &'static str {
+pub async fn root() -> impl IntoResponse {
     "Hello, World!"
 }
 
-async fn hello_img() -> String {
-    // todo: decode pixel
+async fn hello_img() -> impl IntoResponse {
+    // Base64 encoded pixel
+    let pixel_encoded = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 
-    let result = "".to_string();
-    return result;
+    // todo: decode pixel
+    let decoded = base64::decode(pixel_encoded);
+
+    (
+        axum::response::AppendHeaders([
+            (axum::http::header::CONTENT_TYPE, "image/png"),
+        ]),
+        decoded.unwrap(),
+    )
 }
 
 async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
@@ -69,7 +78,9 @@ async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoRespo
         "Ledger response. You asked for: {}. Ledger replied:\n{}",
         query, ledger_output
     );
-    (StatusCode::OK, result)
+    // todo: split lines
+    // todo: convert to Json
+    (StatusCode::OK, Json(result))
 }
 
 fn run_ledger(command: &str) -> String {
