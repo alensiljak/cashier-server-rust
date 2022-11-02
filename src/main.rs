@@ -74,13 +74,13 @@ async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoRespo
 
     let ledger_output = run_ledger(query);
 
-    let result = format!(
-        "Ledger response. You asked for: {}. Ledger replied:\n{}",
-        query, ledger_output
-    );
-    // todo: split lines
-    // todo: convert to Json
-    (StatusCode::OK, Json(result))
+    // split lines
+    //let rows: Vec<String> = ledger_output.lines().collect();
+    let rows: Vec<String> = ledger_output.lines()
+        .map(|x| String::from(x)).collect();
+
+    // convert to Json
+    (StatusCode::OK, Json(rows))
 }
 
 fn run_ledger(command: &str) -> String {
