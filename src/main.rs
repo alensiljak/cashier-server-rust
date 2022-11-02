@@ -1,12 +1,13 @@
 use axum::{
     extract::Query,
-    routing::{get,post},
+    http::StatusCode,
     response::IntoResponse,
-    Json, Router, http::StatusCode,
+    routing::get,
+    // Json,
+    Router,
 };
-use serde::{Deserialize, Serialize};
-use tracing_subscriber::field::debug;
-use std::{net::SocketAddr, collections::HashMap, future::Future};
+//use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, net::SocketAddr, process::Command};
 //use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tower_http::cors::{Any, CorsLayer};
 
@@ -35,7 +36,7 @@ async fn main() {
         .route("/test", get(root))
         .layer(cors);
 
-    let address = SocketAddr::from(([0,0,0,0], 3000));
+    let address = SocketAddr::from(([0, 0, 0, 0], 3000));
     tracing::debug!("listening on {}", address);
 
     // run it with hyper on localhost:3000
@@ -58,26 +59,37 @@ async fn hello_img() -> String {
 }
 
 async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
-    // impl Future <Output = impl IntoResponse>
-    //todo: run ledger
-
-    //return format!("Ledger endpoint. You asked for {}", payload);
-    //let parameters: Vec<String> = params.into_keys().collect();
-    //let values = params.values();
     let query = params["command"].as_str();
 
-    //tracing::debug!(parameters);
+    let ledger_output = run_ledger(query);
 
-    let result = format!("Ledger endpoint. You asked for {}", query);
+    let result = format!(
+        "Ledger response. You asked for: {}. Ledger replied: {}",
+        query, ledger_output
+    );
     (StatusCode::OK, result)
 }
 
-// #[derive(Deserialize)]
-// struct LedgerCommand {
-//     command: String,
-// }
+fn run_ledger(command: &str) -> String {
+    // separate command into individual arguments
+    let iter = command.split_whitespace();
 
-// #[derive(Serialize)]
-// struct LedgerOutput {
-//     output: String,
-// }
+    let mut ledger = Command::new("ledger");
+    ledger.args(iter);
+
+    //let output = ledger.status().expect("process failed to execute");
+    let output = ledger.output().expect("failed to execute process");
+    //let output = ledger.spawn().expect("ls command failed to start");
+
+    // assert!(output.status.success());
+    let result: String;
+
+    if !output.status.success() {
+        result = String::from_utf8(output.stderr).unwrap();
+        // println!("not success: {}", result);
+    } else {
+        result = String::from_utf8(output.stdout).unwrap();
+    }
+
+    return result;
+}
