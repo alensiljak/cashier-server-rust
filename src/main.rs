@@ -1,31 +1,17 @@
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
-use tracing::Level;
 //use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, net::SocketAddr, process::Command};
 use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
 };
+use tracing::{Level, instrument, info};
 use tracing_subscriber::{filter, layer::SubscriberExt, util::SubscriberInitExt};
 extern crate base64;
 
 #[tokio::main]
 async fn main() {
-    // tracing init
-    let tracing_layer = tracing_subscriber::fmt::layer();
-    // .pretty()
-    let filter = filter::Targets::new()
-        .with_target("cashier_server", Level::TRACE)
-        // .with_target("tower_http::trace::on_response", Level::TRACE)
-        // .with_target("tower_http::trace::on_request", Level::TRACE)
-        .with_default(Level::INFO);
-    tracing_subscriber::registry()
-        .with(tracing_layer)
-        .with(filter)
-        .init();
-    //     .with(tracing_subscriber::EnvFilter::new(
-    //         std::env::var("RUST_LOG").unwrap_or_else(|_| "cashier-server=debug".into()),
-    //     ))
+    initialize_logging();
 
     let cors = CorsLayer::new().allow_origin(Any);
 
@@ -39,6 +25,7 @@ async fn main() {
         // middleware
         .layer(cors)
         .layer(TraceLayer::new_for_http());
+        //.layer(TraceLayer::on_request(self, new_on_request));
 
     // run it with hyper on localhost:3000
     let address = SocketAddr::from(([0, 0, 0, 0], 3000));
@@ -51,7 +38,34 @@ async fn main() {
         .unwrap();
 }
 
-#[tracing::instrument]
+/**
+ * Initialize and configure logging/tracing to the console window.
+ */
+fn initialize_logging() {
+    // tracing init
+    // tracing_subscriber::fmt::init();
+
+    let tracing_layer = tracing_subscriber::fmt::layer();
+    //.compact();
+    // .pretty()
+
+    let filter = filter::Targets::new()
+        .with_target("cashier_server", Level::TRACE)
+        // .with_target("tower_http::trace::on_response", Level::TRACE)
+        // .with_target("tower_http::trace::on_request", Level::TRACE)
+        .with_default(Level::INFO);
+
+    tracing_subscriber::registry()
+        .with(tracing_layer)
+        .with(filter)
+        .init();
+
+    //     .with(tracing_subscriber::EnvFilter::new(
+    //         std::env::var("RUST_LOG").unwrap_or_else(|_| "cashier-server=debug".into()),
+    //     ))
+}
+
+// #[instrument]
 async fn hello_img() -> impl IntoResponse {
     // Base64 encoded pixel
     let pixel_encoded = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
@@ -64,7 +78,7 @@ async fn hello_img() -> impl IntoResponse {
     )
 }
 
-#[tracing::instrument]
+// #[instrument]
 async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     if !params.contains_key("command") {
         let mut result: Vec<String> = Vec::new();
@@ -108,7 +122,7 @@ fn run_ledger(command: &str) -> String {
     return result;
 }
 
-#[tracing::instrument]
+// #[instrument]
 async fn shutdown() {
     let msg = "Shutting down on client request...";
     tracing::warn!(msg);
