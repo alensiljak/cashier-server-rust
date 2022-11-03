@@ -5,7 +5,7 @@ use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
 };
-use tracing::{Level, instrument, info};
+use tracing::{info, instrument, Level};
 use tracing_subscriber::{filter, layer::SubscriberExt, util::SubscriberInitExt};
 extern crate base64;
 
@@ -25,7 +25,6 @@ async fn main() {
         // middleware
         .layer(cors)
         .layer(TraceLayer::new_for_http());
-        //.layer(TraceLayer::on_request(self, new_on_request));
 
     // run it with hyper on localhost:3000
     let address = SocketAddr::from(([0, 0, 0, 0], 3000));
@@ -43,11 +42,9 @@ async fn main() {
  */
 fn initialize_logging() {
     // tracing init
-    // tracing_subscriber::fmt::init();
+    //tracing_subscriber::fmt::init();
 
-    let tracing_layer = tracing_subscriber::fmt::layer();
-    //.compact();
-    // .pretty()
+    let formatting_layer = tracing_subscriber::fmt::layer();
 
     let filter = filter::Targets::new()
         .with_target("cashier_server", Level::TRACE)
@@ -56,13 +53,9 @@ fn initialize_logging() {
         .with_default(Level::INFO);
 
     tracing_subscriber::registry()
-        .with(tracing_layer)
+        .with(formatting_layer)
         .with(filter)
         .init();
-
-    //     .with(tracing_subscriber::EnvFilter::new(
-    //         std::env::var("RUST_LOG").unwrap_or_else(|_| "cashier-server=debug".into()),
-    //     ))
 }
 
 // #[instrument]
