@@ -8,7 +8,7 @@ use axum::{
 };
 //use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, net::SocketAddr, process::Command};
-//use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tower_http::cors::{Any, CorsLayer};
 extern crate base64;
 
@@ -21,7 +21,13 @@ async fn main() {
     //     ))
     //     .with(tracing_subscriber::fmt::layer())
     //     .init();
-    tracing_subscriber::fmt::init();
+    
+    //tracing_subscriber::fmt::init();
+
+    // Start tracing.
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 
     let cors = CorsLayer::new().allow_origin(Any);
 
@@ -62,6 +68,8 @@ async fn hello_img() -> impl IntoResponse {
 }
 
 async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
+    //tracing::debug!("ledger query {}", );
+
     if !params.contains_key("command") {
         let mut result: Vec<String> = Vec::new();
         result.push(String::from("No Ledger command sent"));
