@@ -5,7 +5,7 @@ use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
 };
-use tracing::{info, instrument, Level};
+use tracing::{info, instrument, Level, debug};
 use tracing_subscriber::{filter, layer::SubscriberExt, util::SubscriberInitExt};
 extern crate base64;
 
@@ -73,6 +73,8 @@ async fn hello_img() -> impl IntoResponse {
 
 // #[instrument]
 async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
+    debug!("ledger: {:?}", params);
+
     if !params.contains_key("command") {
         let mut result: Vec<String> = Vec::new();
         result.push(String::from("No Ledger command sent"));
