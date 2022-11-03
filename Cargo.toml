@@ -10,12 +10,17 @@ license = 'GPL-3.0-or-later'
 readme = "README.md"
 
 [dependencies]
-axum = { version="0.6.0-rc.2", features=['headers'] }
-base64 = {version = '0.13.1'}
-http = {version = "0.2.8"}
+axum = { version = "0.6.0-rc.2", features = ['headers'] }
+base64 = { version = '0.13.1' }
+http = { version = "0.2.8" }
 serde = { version = "1.0.147", features = ["derive"] }
 serde_json = "1.0.87"
-tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread", "signal"] }
-tower-http = { version = "0.3.4", features = ["cors"] }
-tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+tokio = { version = "1.21.2", features = [
+    "macros",
+    "rt-multi-thread",
+    "signal",
+    # 'tracing'
+] }
+tower-http = { version = '0.3.4', features = ['cors', 'trace'] }
+tracing = '0.1.37'
+tracing-subscriber = { version = '0.3.16', features = ['env-filter'] }

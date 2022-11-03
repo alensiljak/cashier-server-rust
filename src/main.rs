@@ -1,33 +1,31 @@
-use axum::{
-    extract::Query,
-    http::StatusCode,
-    response::IntoResponse,
-    routing::get,
-    Json,
-    Router,
-};
+use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
+use tracing::Level;
 //use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, net::SocketAddr, process::Command};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    trace::TraceLayer,
+};
+use tracing_subscriber::{filter, layer::SubscriberExt, util::SubscriberInitExt};
 extern crate base64;
 
 #[tokio::main]
 async fn main() {
     // tracing init
-    // tracing_subscriber::registry()
+    let tracing_layer = tracing_subscriber::fmt::layer();
+    // .pretty()
+    let filter = filter::Targets::new()
+        .with_target("cashier_server", Level::TRACE)
+        // .with_target("tower_http::trace::on_response", Level::TRACE)
+        // .with_target("tower_http::trace::on_request", Level::TRACE)
+        .with_default(Level::INFO);
+    tracing_subscriber::registry()
+        .with(tracing_layer)
+        .with(filter)
+        .init();
     //     .with(tracing_subscriber::EnvFilter::new(
     //         std::env::var("RUST_LOG").unwrap_or_else(|_| "cashier-server=debug".into()),
     //     ))
-    //     .with(tracing_subscriber::fmt::layer())
-    //     .init();
-    
-    //tracing_subscriber::fmt::init();
-
-    // Start tracing.
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer())
-        .init();
 
     let cors = CorsLayer::new().allow_origin(Any);
 
@@ -38,7 +36,9 @@ async fn main() {
         .route("/hello", get(hello_img))
         .route("/ping", get(|| async { "pong" }))
         .route("/shutdown", get(shutdown))
-        .layer(cors);
+        // middleware
+        .layer(cors)
+        .layer(TraceLayer::new_for_http());
 
     // run it with hyper on localhost:3000
     let address = SocketAddr::from(([0, 0, 0, 0], 3000));
@@ -51,25 +51,21 @@ async fn main() {
         .unwrap();
 }
 
+#[tracing::instrument]
 async fn hello_img() -> impl IntoResponse {
     // Base64 encoded pixel
     let pixel_encoded = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
-
-    // todo: decode pixel
+    // decode pixel
     let decoded = base64::decode(pixel_encoded);
 
     (
-        axum::response::AppendHeaders([
-            (axum::http::header::CONTENT_TYPE, "image/png"),
-        ]),
+        axum::response::AppendHeaders([(axum::http::header::CONTENT_TYPE, "image/png")]),
         decoded.unwrap(),
     )
 }
 
+#[tracing::instrument]
 async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
-    //let all_params = params.
-    tracing::debug!("ledger query {:?}", params);
-
     if !params.contains_key("command") {
         let mut result: Vec<String> = Vec::new();
         result.push(String::from("No Ledger command sent"));
@@ -82,8 +78,7 @@ async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoRespo
 
     // split lines
     //let rows: Vec<String> = ledger_output.lines().collect();
-    let rows: Vec<String> = ledger_output.lines()
-        .map(|x| String::from(x)).collect();
+    let rows: Vec<String> = ledger_output.lines().map(|x| String::from(x)).collect();
 
     // convert to Json
     (StatusCode::OK, Json(rows))
@@ -113,9 +108,11 @@ fn run_ledger(command: &str) -> String {
     return result;
 }
 
+#[tracing::instrument]
 async fn shutdown() {
     let msg = "Shutting down on client request...";
+    tracing::warn!(msg);
     //panic!("{}", msg);
-    println!("{}", msg);
+    // println!("{}", msg);
     std::process::exit(0);
 }
