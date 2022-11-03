@@ -4,7 +4,6 @@ use axum::{
     response::IntoResponse,
     routing::get,
     Json,
-    // Json,
     Router,
 };
 //use serde::{Deserialize, Serialize};
@@ -15,8 +14,6 @@ extern crate base64;
 
 #[tokio::main]
 async fn main() {
-    //println!("Hello, world!");
-
     // tracing init
     // tracing_subscriber::registry()
     //     .with(tracing_subscriber::EnvFilter::new(
@@ -34,24 +31,19 @@ async fn main() {
         .route("/", get(ledger))
         .route("/hello", get(hello_img))
         .route("/ping", get(|| async { "pong" }))
-        .route("/test", get(root))
+        .route("/shutdown", get(shutdown))
         .layer(cors);
 
+    // run it with hyper on localhost:3000
     let address = SocketAddr::from(([0, 0, 0, 0], 3000));
 
     tracing::debug!("listening on {}", address);
     // print!("Listening on {}", address);
 
-    // run it with hyper on localhost:3000
     axum::Server::bind(&address)
         .serve(app.into_make_service())
         .await
         .unwrap();
-}
-
-// basic handler that responds with a static string
-pub async fn root() -> impl IntoResponse {
-    "Hello, World!"
 }
 
 async fn hello_img() -> impl IntoResponse {
@@ -70,6 +62,12 @@ async fn hello_img() -> impl IntoResponse {
 }
 
 async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
+    if !params.contains_key("command") {
+        let mut result: Vec<String> = Vec::new();
+        result.push(String::from("No Ledger command sent"));
+        return (StatusCode::BAD_REQUEST, Json(result));
+    }
+
     let query = params["command"].as_str();
 
     let ledger_output = run_ledger(query);
@@ -105,4 +103,9 @@ fn run_ledger(command: &str) -> String {
     }
 
     return result;
+}
+
+async fn shutdown() {
+    panic!("Shutting down on client request...");
+    std::process::exit(0);
 }

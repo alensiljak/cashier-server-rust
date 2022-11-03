@@ -1,13 +1,16 @@
 [package]
-name = "cashier-server"
-version = "0.2.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+name = 'cashier-server'
+description = 'Cashier Ledger-cli server component'
+version = '0.2.0'
+edition = '2021'
+authors = ['Alen Šiljak']
+repository = 'https://github.com/alensiljak/cashier-server-rust'
+categories = ['command-line-utilities', 'web-programming::http-server']
+license = 'GPL-3.0-or-later'
 
 [dependencies]
-axum = { version="0.6.0-rc.2", features=["headers"] }
-base64 = {version = "0.13.1"}
+axum = { version="0.6.0-rc.2", features=['headers'] }
+base64 = {version = '0.13.1'}
 http = {version = "0.2.8"}
 serde = { version = "1.0.147", features = ["derive"] }
 serde_json = "1.0.87"
