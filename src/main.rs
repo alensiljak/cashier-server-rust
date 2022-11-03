@@ -107,7 +107,7 @@ fn run_ledger(command: &str) -> String {
 
 async fn shutdown() {
     let msg = "Shutting down on client request...";
-    //panic!();
+    //panic!("{}", msg);
     println!("{}", msg);
     std::process::exit(0);
 }
