@@ -44,7 +44,6 @@ async fn main() {
     let address = SocketAddr::from(([0, 0, 0, 0], 3000));
 
     tracing::debug!("listening on {}", address);
-    // print!("Listening on {}", address);
 
     axum::Server::bind(&address)
         .serve(app.into_make_service())
@@ -68,7 +67,8 @@ async fn hello_img() -> impl IntoResponse {
 }
 
 async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
-    //tracing::debug!("ledger query {}", );
+    //let all_params = params.
+    tracing::debug!("ledger query {:?}", params);
 
     if !params.contains_key("command") {
         let mut result: Vec<String> = Vec::new();
