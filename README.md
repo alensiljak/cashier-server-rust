@@ -1,5 +1,7 @@
 # cashier-server
-Ledger-cli REST server for Cashier
+Ledger-cli REST server for [Cashier](https://github.com/alensiljak/cashier) PWA.
+
+Cashier Server acts as a mediator between Cashier PWA and Ledger CLI, forwarding queries to Ledger and the results to Cashier. Used for synchronizing the ledger data in Cashier.
 
 This version of the Cashier Server is implemented in Rust.
 
