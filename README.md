@@ -11,10 +11,20 @@ Previous implementations:
 - [CashierSync](https://gitlab.com/alensiljak/cashiersync) in Python
 - [CashierSync Go](https://gitlab.com/alensiljak/cashiersync-go) in Go
 
+# Installation
+
+`cargo install cashier-server`
+
+# Run
+Make sure that Ledger CLI is configured and can be called from the directory.
+Then run:
+
+`cashier-server`
+
 # Development
 
 VSCode + Rust extension(s).
-`cargo run` in project directory.
+`cargo run` in the project directory.
 
 # Publishing
 
