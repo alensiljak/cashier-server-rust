@@ -48,8 +48,9 @@ fn initialize_logging() {
 
     let filter = filter::Targets::new()
         .with_target("cashier_server", Level::TRACE)
-        // .with_target("tower_http::trace::on_response", Level::TRACE)
-        // .with_target("tower_http::trace::on_request", Level::TRACE)
+        .with_target("tower_http::trace::on_response", Level::DEBUG)
+        .with_target("tower_http::trace::on_request", Level::DEBUG)
+        .with_target("tower_http::trace::make_span", Level::DEBUG)
         .with_default(Level::INFO);
 
     tracing_subscriber::registry()

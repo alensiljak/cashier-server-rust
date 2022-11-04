@@ -96,7 +96,7 @@ checksum = "ec8a7b6a70fde80372154c65702f00a0f56f3e1c36abbc6c440484be248856db"
 
 [[package]]
 name = "cashier-server"
-version = "0.3.2"
+version = "0.4.0"
 dependencies = [
  "axum",
  "base64",
