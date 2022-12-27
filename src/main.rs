@@ -1,11 +1,14 @@
+/*!
+ * CLI for Cashier Server
+ */
+
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
-//use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, net::SocketAddr, process::Command};
 use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
 };
-use tracing::{Level, debug};
+use tracing::Level;
 use tracing_subscriber::{filter, layer::SubscriberExt, util::SubscriberInitExt};
 extern crate base64;
 
@@ -17,7 +20,6 @@ async fn main() {
 
     // build our application with a single route
     let app = Router::new()
-        //.route("/", get(|| async { "Hello, World!" }))
         .route("/", get(ledger))
         .route("/hello", get(hello_img))
         .route("/ping", get(|| async { "pong" }))
@@ -29,7 +31,7 @@ async fn main() {
     // run it with hyper on localhost:3000
     let address = SocketAddr::from(([0, 0, 0, 0], 3000));
 
-    tracing::debug!("listening on {}", address);
+    log::info!("listening on {}", address);
 
     axum::Server::bind(&address)
         .serve(app.into_make_service())
@@ -41,15 +43,12 @@ async fn main() {
  * Initialize and configure logging/tracing to the console window.
  */
 fn initialize_logging() {
-    // tracing init
-    //tracing_subscriber::fmt::init();
-
     let formatting_layer = tracing_subscriber::fmt::layer();
 
     let filter = filter::Targets::new()
         .with_target("cashier_server", Level::TRACE)
         .with_target("tower_http::trace::on_response", Level::DEBUG)
-        .with_target("tower_http::trace::on_request", Level::DEBUG)
+        // .with_target("tower_http::trace::on_request", Level::DEBUG)
         .with_target("tower_http::trace::make_span", Level::DEBUG)
         .with_default(Level::INFO);
 
@@ -59,11 +58,9 @@ fn initialize_logging() {
         .init();
 }
 
-// #[instrument]
 async fn hello_img() -> impl IntoResponse {
     // Base64 encoded pixel
     let pixel_encoded = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
-    // decode pixel
     let decoded = base64::decode(pixel_encoded);
 
     (
@@ -72,9 +69,8 @@ async fn hello_img() -> impl IntoResponse {
     )
 }
 
-// #[instrument]
 async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
-    debug!("ledger: {:?}", params);
+    log::debug!("ledger: {:?}", params);
 
     if !params.contains_key("command") {
         let mut result: Vec<String> = Vec::new();
