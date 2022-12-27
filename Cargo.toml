@@ -1,13 +1,14 @@
 [package]
 name = 'cashier-server'
 description = 'Cashier Ledger-cli server component'
-version = '0.4.1'
+version = '0.4.2'
 edition = '2021'
 authors = ['Alen Šiljak']
 repository = 'https://github.com/alensiljak/cashier-server-rust'
 categories = ['command-line-utilities', 'web-programming::http-server']
 license = 'GPL-3.0-or-later'
 readme = "README.md"
+documentation = 'https://docs.rs/cashier-server/'
 
 [dependencies]
 axum = { version = "0.6.1", features = ['headers'] }
