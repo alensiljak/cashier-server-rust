@@ -3,6 +3,7 @@
  */
 
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
+use base64::{engine::general_purpose, Engine};
 use std::{collections::HashMap, net::SocketAddr, process::Command};
 use tower_http::{
     cors::{Any, CorsLayer},
@@ -61,7 +62,7 @@ fn initialize_logging() {
 async fn hello_img() -> impl IntoResponse {
     // Base64 encoded pixel
     let pixel_encoded = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
-    let decoded = base64::decode(pixel_encoded);
+    let decoded = general_purpose::STANDARD.decode(pixel_encoded);
 
     (
         axum::response::AppendHeaders([(axum::http::header::CONTENT_TYPE, "image/png")]),

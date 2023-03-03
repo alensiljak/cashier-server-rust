@@ -114,12 +114,13 @@ checksum = "89b2fd2a0dcf38d7971e2194b6b6eebab45ae01067456a7fd93d5547a61b70be"
 
 [[package]]
 name = "cashier-server"
-version = "0.4.2"
+version = "0.4.4"
 dependencies = [
  "axum",
  "base64 0.21.0",
  "env_logger",
  "http",
+ "interactive_process",
  "log",
  "serde_json",
  "tokio",
@@ -369,6 +370,12 @@ dependencies = [
  "tracing",
  "want",
 ]
+
+[[package]]
+name = "interactive_process"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5bea3f0b65ff4df5241d0d586df4ab529b7584ee9ada2ad163ab756032733b9"
 
 [[package]]
 name = "io-lifetimes"
