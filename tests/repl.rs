@@ -1,10 +1,9 @@
-use std::{process::Command, thread::sleep, time::Duration};
-
-/**
+/*
  * Testing running Ledger in REPL mode.
  */
 
 /*
+use std::{process::Command, thread::sleep, time::Duration};
 use interactive_process::InteractiveProcess;
 
 #[test]
