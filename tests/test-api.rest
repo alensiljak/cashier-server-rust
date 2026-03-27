@@ -1,0 +1,15 @@
+### Test
+@server = http://localhost:3000
+###
+# accounts
+get {{server}}/?query=SELECT%20sum(number),%20currency,%20account%20ORDER%20BY%20account
+###
+# balances
+get {{server}}/?query=SELECT%20account,%20str(CONVERT(value(sum(position)),%20%27EUR%27))%20%20%20%20%20%20%20%20%20WHERE%20account%20~%20%27^Assets:Investment%27%20%20%20%20%20%20%20%20%20GROUP%20BY%20account%20%20%20%20%20%20%20%20%20HAVING%20NOT%20empty(sum(position))%20%20%20%20%20%20%20%20%20ORDER%20BY%20account
+###
+# payees
+get {{server}}/?query=SELECT%20DISTINCT(COALESCE(payee,%20narration))%20as%20payee%20FROM%20transactions%20%20%20%20%20%20%20%20%20%20WHERE%20date%20%3E=%202006-03-27%20ORDER%20BY%20payee
+###
+# infrastructure
+get {{server}}/infrastructure?file_path=journal.bean
+###
