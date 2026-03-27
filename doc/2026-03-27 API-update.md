@@ -8,7 +8,7 @@ The purpose of this project is to port the API from `cashier-server-python` (Pyt
 - [x] add the skeleton endpoints
 - [x] refactor ledger execution to use asynchronous `tokio::process`
 - [x] implement environment variable support (`dotenvy`)
-- [ ] rewrite each endpoint to match the Python implementation
+- [x] rewrite each endpoint to match the Python implementation
 - [ ] ensure CORS is applied
 
 ## API Discrepancies
@@ -24,11 +24,11 @@ Discrepancies in methods between the Rust and the Python server versions.
 
 Endpoint list with status update (todo, in-progress, ported).
 
-| Endpoint                 | Status | Notes                         |
-|:-------------------------|:-------|:------------------------------|
-| `/`                      | ported | Refactored to async process   |
-| `/hello`                 | ported |                               |
-| `/ping`                  | ported |                               |
-| `/reload`                | ported | Not needed with a CLI engine  |
-| `/infrastructure/config` | ported | Skeleton added; needs logic   |
-| `/infrastructure/*`      | ported | Skeleton added; needs logic   |
+| Endpoint                 | Status  | Notes                        |
+|:-------------------------|:--------|:-----------------------------|
+| `/`                      | ✅      | Refactored to async process  |
+| `/hello`                 | ✅      |                              |
+| `/ping`                  | ✅      |                              |
+| `/reload`                | ✅      | Not needed with a CLI engine |
+| `/infrastructure/config` | ✅      | Ported from Python           |
+| `/infrastructure/*`      | ✅      | Ported from Python           |

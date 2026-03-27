@@ -4,6 +4,7 @@
 
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use base64::{engine::general_purpose, Engine};
+use serde::Serialize;
 use std::{collections::HashMap, net::SocketAddr};
 use tower_http::{
     cors::{Any, CorsLayer},
@@ -114,19 +115,44 @@ async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoRespo
 //     (StatusCode::OK, "Reloaded")
 // }
 
+#[derive(Serialize)]
+struct InfrastructureResponse {
+    content: String,
+}
+
 async fn get_config() -> impl IntoResponse {
-    // TODO: Read BEANCOUNT_FILE or config path
-    (StatusCode::NOT_IMPLEMENTED, "Not implemented")
+    read_infrastructure_file("config.bean").await
 }
 
 async fn get_accounts() -> impl IntoResponse {
-    // TODO: Read accounts file
-    (StatusCode::NOT_IMPLEMENTED, "Not implemented")
+    read_infrastructure_file("accounts.bean").await
 }
 
 async fn get_commodities() -> impl IntoResponse {
-    // TODO: Read commodities file
-    (StatusCode::NOT_IMPLEMENTED, "Not implemented")
+    read_infrastructure_file("commodities.bean").await
+}
+
+/**
+ * Shared logic to read Beancount infrastructure files relative to the main ledger file.
+ */
+async fn read_infrastructure_file(filename: &str) -> impl IntoResponse {
+    let bean_file = match std::env::var("BEANCOUNT_FILE") {
+        Ok(v) => v,
+        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, "BEANCOUNT_FILE environment variable not set").into_response(),
+    };
+
+    let path = std::path::Path::new(&bean_file);
+    let parent = match path.parent() {
+        Some(p) => p,
+        None => return (StatusCode::INTERNAL_SERVER_ERROR, "Invalid BEANCOUNT_FILE path").into_response(),
+    };
+
+    let file_path = parent.join(filename);
+
+    match tokio::fs::read_to_string(file_path).await {
+        Ok(content) => (StatusCode::OK, Json(InfrastructureResponse { content })).into_response(),
+        Err(e) => (StatusCode::NOT_FOUND, format!("File not found: {}", e)).into_response(),
+    }
 }
 
 async fn run_ledger(command: &str) -> String {
