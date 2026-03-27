@@ -22,7 +22,11 @@ async fn main() {
     dotenv().ok();
     initialize_logging();
 
-    let cors = CorsLayer::new().allow_origin(Any);
+    // no need to allow credentials explicitly
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
 
     // build our application with a single route
     let app = Router::new()
