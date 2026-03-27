@@ -2,8 +2,8 @@
  * CLI for Cashier Server
  */
 
-use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use axum::response::AppendHeaders;
+use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use base64::{engine::general_purpose, Engine};
 use serde::Serialize;
 use std::collections::HashMap;
@@ -14,8 +14,8 @@ use tower_http::{
 use tracing::Level;
 use tracing_subscriber::{filter, layer::SubscriberExt, util::SubscriberInitExt};
 extern crate base64;
-use tokio::process::Command;
 use dotenvy::dotenv;
+use tokio::process::Command;
 
 #[tokio::main]
 async fn main() {
@@ -30,10 +30,9 @@ async fn main() {
 
     // build our application with a single route
     let app = Router::new()
-        .route("/", get(ledger))
+        .route("/", get(route_rust_ledger))
         .route("/hello", get(hello_img))
         .route("/ping", get(|| async { "pong" }))
-        // .route("/reload", get(reload))
         .route("/infrastructure/config", get(get_config))
         .route("/infrastructure/accounts", get(get_accounts))
         .route("/infrastructure/commodities", get(get_commodities))
@@ -80,42 +79,36 @@ async fn hello_img() -> impl IntoResponse {
     )
 }
 
-async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
-    log::debug!("ledger: {:?}", params);
+async fn route_rust_ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
+    log::debug!("rust_ledger: {:?}", params);
 
-    if !params.contains_key("command") {
-        let mut result: Vec<String> = Vec::new();
-        result.push(String::from("No Ledger command sent"));
-        return (StatusCode::BAD_REQUEST, Json(result));
+    if !params.contains_key("query") {
+        return (
+            StatusCode::BAD_REQUEST,
+            [(
+                axum::http::header::CONTENT_TYPE,
+                "application/json",
+            )],
+            serde_json::json!({"error": "No query provided"}).to_string(),
+        )
+            .into_response();
     }
 
-    let query = params["command"].as_str();
+    let query = params["query"].as_str();
 
-    let ledger_output = run_ledger(query).await;
+    let ledger_output = run_rust_ledger(query).await;
 
-    // split lines
-    //let rows: Vec<String> = ledger_output.lines().collect();
-    let rows: Vec<String> = ledger_output.lines().map(|x| String::from(x)).collect();
-
-    // convert to Json
-    (StatusCode::OK, Json(rows))
+    // Return the raw JSON output directly with proper content type
+    (
+        StatusCode::OK,
+        [(
+            axum::http::header::CONTENT_TYPE,
+            "application/json",
+        )],
+        ledger_output,
+    )
+        .into_response()
 }
-
-// Reload is only use with Beancount in-memory cache.
-// We don't have this when calling a CLI engine.
-// async fn reload() -> impl IntoResponse {
-//     log::info!("Reloading Beancount data");
-
-//     // Refresh environment variables from .env file
-//     dotenv().ok();
-
-//     if let Ok(bean_file) = std::env::var("BEANCOUNT_FILE") {
-//         log::info!("Loading Beancount file: {}", bean_file);
-//         // Future implementation: Re-initialize in-memory connection or cache here
-//     }
-
-//     (StatusCode::OK, "Reloaded")
-// }
 
 #[derive(Serialize)]
 struct InfrastructureResponse {
@@ -138,15 +131,27 @@ async fn get_commodities() -> impl IntoResponse {
  * Shared logic to read Beancount infrastructure files relative to the main ledger file.
  */
 async fn read_infrastructure_file(filename: &str) -> impl IntoResponse {
-    let bean_file = match std::env::var("BEANCOUNT_FILE") {
+    let bean_file = match std::env::var("LEDGER_FILE") {
         Ok(v) => v,
-        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, "BEANCOUNT_FILE environment variable not set").into_response(),
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "LEDGER_FILE environment variable not set",
+            )
+                .into_response()
+        }
     };
 
     let path = std::path::Path::new(&bean_file);
     let parent = match path.parent() {
         Some(p) => p,
-        None => return (StatusCode::INTERNAL_SERVER_ERROR, "Invalid BEANCOUNT_FILE path").into_response(),
+        None => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Invalid LEDGER_FILE path",
+            )
+                .into_response()
+        }
     };
 
     let file_path = parent.join(filename);
@@ -157,26 +162,29 @@ async fn read_infrastructure_file(filename: &str) -> impl IntoResponse {
     }
 }
 
-async fn run_ledger(command: &str) -> String {
-    // separate command into individual arguments
-    let iter = command.split_whitespace();
+/**
+ * Run a Rust Ledger query using the rledger command-line tool.
+ */
+async fn run_rust_ledger(query: &str) -> String {
+    // Get the ledger file from environment variable
+    let bean_file = match std::env::var("LEDGER_FILE") {
+        Ok(v) => v,
+        Err(_) => return String::from("LEDGER_FILE environment variable not set"),
+    };
 
-    let mut ledger = Command::new("ledger");
-    ledger.args(iter);
+    // Prepare command arguments: rledger query <file> "<query>" -f json
+    let mut rledger = Command::new("rledger");
+    rledger.args(["query", "-f", "json", &bean_file, query]);
 
-    // let output = ledger.status().await.expect("process failed to execute");
-    let output = ledger.output().await.expect("failed to execute process");
-    //let output = ledger.spawn().expect("ls command failed to start");
+    // Execute the command
+    let output = rledger.output().await.expect("failed to execute process");
 
-    // assert!(output.status.success());
     let result: String;
-
     if !output.status.success() {
         result = String::from_utf8_lossy(&output.stderr).to_string();
-        // println!("not success: {}", result);
     } else {
-       result = String::from_utf8_lossy(&output.stdout).to_string();
-   }
+        result = String::from_utf8_lossy(&output.stdout).to_string();
+    }
 
     return result;
 }

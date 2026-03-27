@@ -37,14 +37,18 @@ The underlying engine has included:
 - Beancount
 - Ledger-cli
 
-## Installation
+## Setup
 
-`cargo install cashier-server`
+```sh
+cargo install cashier-server
+```
+
+Make sure that Rust Ledger is in the Path.
+Configure it with the default ledger file or set `LEDGER_FILE` environment variable.
 
 ## Run
 
-Make sure that Rust Ledger is in the Path and is configured with the default ledger file.
-Then run:
+Execute:
 
 ```sh
 cashier-server

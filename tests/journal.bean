@@ -1,0 +1,20 @@
+; demo file for the server
+
+2026-03-01 commodity ABC
+  name: "Test Stock"
+  asset-class: "stocks"
+
+
+2026-03-01 open Assets:Cash
+2026-03-01 open Assets:Bank
+2026-03-01 open Assets:Investment
+2026-03-01 open Expenses:Food
+2026-03-01 open Income:Salary
+
+2026-03-26 * "Grocery Store"
+  Expenses:Food        50.00 EUR
+  Assets:Bank         -50.00 EUR
+
+2026-03-27 * "Buy Stock"
+  Assets:Investment   5 ABC {100.00 EUR}
+  Assets:Bank        -500.00 EUR
