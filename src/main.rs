@@ -4,7 +4,7 @@
 
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use base64::{engine::general_purpose, Engine};
-use std::{collections::HashMap, net::SocketAddr, process::Command};
+use std::{collections::HashMap, net::SocketAddr};
 use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
@@ -12,9 +12,12 @@ use tower_http::{
 use tracing::Level;
 use tracing_subscriber::{filter, layer::SubscriberExt, util::SubscriberInitExt};
 extern crate base64;
+use tokio::process::Command;
+use dotenvy::dotenv;
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
     initialize_logging();
 
     let cors = CorsLayer::new().allow_origin(Any);
@@ -24,6 +27,10 @@ async fn main() {
         .route("/", get(ledger))
         .route("/hello", get(hello_img))
         .route("/ping", get(|| async { "pong" }))
+        .route("/reload", get(reload))
+        .route("/infrastructure/config", get(get_config))
+        .route("/infrastructure/accounts", get(get_accounts))
+        .route("/infrastructure/commodities", get(get_commodities))
         .route("/shutdown", get(shutdown))
         // middleware
         .layer(cors)
@@ -81,7 +88,7 @@ async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoRespo
 
     let query = params["command"].as_str();
 
-    let ledger_output = run_ledger(query);
+    let ledger_output = run_ledger(query).await;
 
     // split lines
     //let rows: Vec<String> = ledger_output.lines().collect();
@@ -91,26 +98,46 @@ async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoRespo
     (StatusCode::OK, Json(rows))
 }
 
-fn run_ledger(command: &str) -> String {
+async fn reload() -> impl IntoResponse {
+    // TODO: Implement actual reload logic if caching is introduced
+    (StatusCode::OK, "Reloaded")
+}
+
+async fn get_config() -> impl IntoResponse {
+    // TODO: Read BEANCOUNT_FILE or config path
+    (StatusCode::NOT_IMPLEMENTED, "Not implemented")
+}
+
+async fn get_accounts() -> impl IntoResponse {
+    // TODO: Read accounts file
+    (StatusCode::NOT_IMPLEMENTED, "Not implemented")
+}
+
+async fn get_commodities() -> impl IntoResponse {
+    // TODO: Read commodities file
+    (StatusCode::NOT_IMPLEMENTED, "Not implemented")
+}
+
+async fn run_ledger(command: &str) -> String {
     // separate command into individual arguments
     let iter = command.split_whitespace();
 
     let mut ledger = Command::new("ledger");
     ledger.args(iter);
 
-    //let output = ledger.status().expect("process failed to execute");
-    let output = ledger.output().expect("failed to execute process");
+    // let output = ledger.status().await.expect("process failed to execute");
+    let output = ledger.output().await.expect("failed to execute process");
     //let output = ledger.spawn().expect("ls command failed to start");
 
     // assert!(output.status.success());
     let result: String;
 
     if !output.status.success() {
-        result = String::from_utf8(output.stderr).unwrap();
+        result = String::from_utf8_lossy(&output.stderr).to_string();
         // println!("not success: {}", result);
     } else {
-        result = String::from_utf8(output.stdout).unwrap();
-    }
+       result = String::from_utf8_lossy(&output.stdout).to_string();
+   }
 
     return result;
 }
