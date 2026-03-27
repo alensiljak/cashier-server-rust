@@ -9,7 +9,7 @@ The purpose of this project is to port the API from `cashier-server-python` (Pyt
 - [x] refactor ledger execution to use asynchronous `tokio::process`
 - [x] implement environment variable support (`dotenvy`)
 - [x] rewrite each endpoint to match the Python implementation
-- [ ] ensure CORS is applied
+- [x] ensure CORS is applied
 
 ## API Discrepancies
 
