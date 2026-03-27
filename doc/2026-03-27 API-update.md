@@ -25,8 +25,8 @@ Discrepancies in methods between the Rust and the Python server versions.
 Endpoint list with status update (todo, in-progress, ported).
 
 | Endpoint                 | Status  | Notes                        |
-|:-------------------------|:--------|:-----------------------------|
-| `/`                      | ✅      | Refactored to async process  |
+|:-------------------------|:------- |:---------------------------- |
+| `/`                      | ✅      |                              |
 | `/hello`                 | ✅      |                              |
 | `/ping`                  | ✅      |                              |
 | `/reload`                | ✅      | Not needed with a CLI engine |
