@@ -3,9 +3,10 @@
  */
 
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
+use axum::response::AppendHeaders;
 use base64::{engine::general_purpose, Engine};
 use serde::Serialize;
-use std::{collections::HashMap, net::SocketAddr};
+use std::collections::HashMap;
 use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
@@ -28,7 +29,7 @@ async fn main() {
         .route("/", get(ledger))
         .route("/hello", get(hello_img))
         .route("/ping", get(|| async { "pong" }))
-        .route("/reload", get(reload))
+        // .route("/reload", get(reload))
         .route("/infrastructure/config", get(get_config))
         .route("/infrastructure/accounts", get(get_accounts))
         .route("/infrastructure/commodities", get(get_commodities))
@@ -38,14 +39,11 @@ async fn main() {
         .layer(TraceLayer::new_for_http());
 
     // run it with hyper on localhost:3000
-    let address = SocketAddr::from(([0, 0, 0, 0], 3000));
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
 
-    log::info!("listening on {}", address);
+    log::info!("listening on {}", listener.local_addr().unwrap());
 
-    axum::Server::bind(&address)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
 /**
@@ -73,7 +71,7 @@ async fn hello_img() -> impl IntoResponse {
     let decoded = general_purpose::STANDARD.decode(pixel_encoded);
 
     (
-        axum::response::AppendHeaders([(axum::http::header::CONTENT_TYPE, "image/png")]),
+        AppendHeaders([(axum::http::header::CONTENT_TYPE, "image/png")]),
         decoded.unwrap(),
     )
 }
