@@ -5,7 +5,7 @@
 use axum::response::AppendHeaders;
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use base64::{engine::general_purpose, Engine};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tower_http::{
     cors::{Any, CorsLayer},
@@ -33,9 +33,7 @@ async fn main() {
         .route("/", get(route_rust_ledger))
         .route("/hello", get(hello_img))
         .route("/ping", get(|| async { "pong" }))
-        .route("/infrastructure/config", get(get_config))
-        .route("/infrastructure/accounts", get(get_accounts))
-        .route("/infrastructure/commodities", get(get_commodities))
+        .route("/infrastructure", get(get_infrastructure))
         .route("/shutdown", get(shutdown))
         // middleware
         .layer(cors)
@@ -115,22 +113,19 @@ struct InfrastructureResponse {
     content: String,
 }
 
-async fn get_config() -> impl IntoResponse {
-    read_infrastructure_file("config.bean").await
-}
-
-async fn get_accounts() -> impl IntoResponse {
-    read_infrastructure_file("accounts.bean").await
-}
-
-async fn get_commodities() -> impl IntoResponse {
-    read_infrastructure_file("commodities.bean").await
+#[derive(Deserialize)]
+struct InfrastructureParams {
+    file_path: String,
 }
 
 /**
- * Shared logic to read Beancount infrastructure files relative to the main ledger file.
+ * Provides a Beancount infrastructure file.
+ * For use with RustLedger.
  */
-async fn read_infrastructure_file(filename: &str) -> impl IntoResponse {
+async fn get_infrastructure(Query(params): Query<InfrastructureParams>) -> impl IntoResponse {
+    let filename = params.file_path;
+    
+    // Read the location from LEDGER_FILE environment variable.
     let bean_file = match std::env::var("LEDGER_FILE") {
         Ok(v) => v,
         Err(_) => {
@@ -142,10 +137,12 @@ async fn read_infrastructure_file(filename: &str) -> impl IntoResponse {
         }
     };
 
+    // Search for the files in the pre-set directory only.
     let path = std::path::Path::new(&bean_file);
     let parent = match path.parent() {
         Some(p) => p,
         None => {
+            log::error!("Invalid LEDGER_FILE path: {}", bean_file);
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Invalid LEDGER_FILE path",
@@ -154,7 +151,7 @@ async fn read_infrastructure_file(filename: &str) -> impl IntoResponse {
         }
     };
 
-    let file_path = parent.join(filename);
+    let file_path = parent.join(&filename);
 
     match tokio::fs::read_to_string(file_path).await {
         Ok(content) => (StatusCode::OK, Json(InfrastructureResponse { content })).into_response(),
