@@ -1,6 +1,6 @@
 # API Update
 
-The purpose of this project is to port the API from `cashier-server-python` to Rust.
+The purpose of this project is to port the API from `cashier-server-python` (Python) to `cashier-sever-rust` (Rust).
 
 ## Steps
 
@@ -29,6 +29,6 @@ Endpoint list with status update (todo, in-progress, ported).
 | `/`                      | ported | Refactored to async process   |
 | `/hello`                 | ported |                               |
 | `/ping`                  | ported |                               |
-| `/reload`                | ported | Skeleton added                |
+| `/reload`                | ported | Not needed with a CLI engine  |
 | `/infrastructure/config` | ported | Skeleton added; needs logic   |
 | `/infrastructure/*`      | ported | Skeleton added; needs logic   |

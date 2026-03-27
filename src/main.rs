@@ -98,10 +98,21 @@ async fn ledger(Query(params): Query<HashMap<String, String>>) -> impl IntoRespo
     (StatusCode::OK, Json(rows))
 }
 
-async fn reload() -> impl IntoResponse {
-    // TODO: Implement actual reload logic if caching is introduced
-    (StatusCode::OK, "Reloaded")
-}
+// Reload is only use with Beancount in-memory cache.
+// We don't have this when calling a CLI engine.
+// async fn reload() -> impl IntoResponse {
+//     log::info!("Reloading Beancount data");
+
+//     // Refresh environment variables from .env file
+//     dotenv().ok();
+
+//     if let Ok(bean_file) = std::env::var("BEANCOUNT_FILE") {
+//         log::info!("Loading Beancount file: {}", bean_file);
+//         // Future implementation: Re-initialize in-memory connection or cache here
+//     }
+
+//     (StatusCode::OK, "Reloaded")
+// }
 
 async fn get_config() -> impl IntoResponse {
     // TODO: Read BEANCOUNT_FILE or config path
